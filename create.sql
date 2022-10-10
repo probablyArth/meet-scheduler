@@ -1,0 +1,25 @@
+CREATE TABLE Schedule VALUES (
+    id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    monday VARCHAR(9) NOT NULL,
+    tuesday VARCHAR(9) NOT NULL,
+    wednesday VARCHAR(9) NOT NULL,
+    thursday VARCHAR(9) NOT NULL,
+    friday VARCHAR(9) NOT NULL,
+    saturday VARCHAR(9) NOT NULL,
+    sunday VARCHAR(9) NOT NULL,
+);
+
+CREATE TABLE User VALUES (
+    id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    name VARCHAR(69) NOT NULL,
+    schelduleId FOREIGN KEY REFERENCES Schedule (id) NOT NULL,
+    password VARCHAR(69) NOT NULL
+);
+
+CREATE TABLE Booking VALUES (
+    id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    topic VARCHAR(6969),
+    bookingUserId FOREIGN KEY REFERENCES User (id) NOT NULL,
+    bookedUserId FOREIGN KEY REFERENCES User (id) NOT NULL,
+    timeRange VARCHAR(9) NOT NULL
+);
