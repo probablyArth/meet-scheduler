@@ -1,31 +1,37 @@
 import os
 from mysql import connector
+from dotenv import load_dotenv
 
+load_dotenv()
 connection = connector.connect(
     host=os.getenv("host"), password=os.getenv("password"), user=os.getenv("user")
 )
 cursor = connection.cursor()
 
 cursor.execute("SHOW DATABASES;")
+if ("meetscheduler",) not in cursor.fetchall():
+    cursor.execute("CREATE DATABASE meetscheduler;")
+cursor.execute("USE meetscheduler")
 cursor.execute("SHOW TABLES;")
 
 SCHEDULE_TABLE_NAME = "schedule"
 USER_TABLE_NAME = "user"
 BOOKING_TABLE_NAME = "booking"
 
-dbs = cursor.fetchall()
+tables = cursor.fetchall()
 
-if (SCHEDULE_TABLE_NAME,) not in dbs:
+if (USER_TABLE_NAME,) not in tables:
     cursor.execute(
-        f"CREATE TABLE {SCHEDULE_TABLE_NAME} ( id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY, monday VARCHAR(9) NOT NULL, tuesday VARCHAR(9) NOT NULL, wednesday VARCHAR(9) NOT NULL, thursday VARCHAR(9) NOT NULL, friday VARCHAR(9) NOT NULL, saturday VARCHAR(9) NOT NULL, sunday VARCHAR(9) NOT NULL, userId INTEGER, FOREIGN KEY (userId) REFERENCES {USER_TABLE_NAME}(id));"
+        f"CREATE TABLE {USER_TABLE_NAME} (id INT PRIMARY KEY NOT NULL AUTO_INCREMENT, name VARCHAR(69) NOT NULL, password VARCHAR(69) NOT NULL);"
     )
 
-if (USER_TABLE_NAME,) not in dbs:
+if (SCHEDULE_TABLE_NAME,) not in tables:
     cursor.execute(
-        f"CREATE TABLE {USER_TABLE_NAME} VALUES (id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, name VARCHAR(69) NOT NULL, password VARCHAR(69) NOT NULL);"
+        f"CREATE TABLE {SCHEDULE_TABLE_NAME} ( id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY, monday CHAR(11) NOT NULL, tuesday CHAR(11) NOT NULL, wednesday CHAR(11) NOT NULL, thursday CHAR(11) NOT NULL, friday CHAR(11) NOT NULL, saturday CHAR(11) NOT NULL, sunday CHAR(11) NOT NULL, userId INTEGER, FOREIGN KEY (userId) REFERENCES {USER_TABLE_NAME}(id));"
     )
 
-if (BOOKING_TABLE_NAME,) not in dbs:
+
+if (BOOKING_TABLE_NAME,) not in tables:
     cursor.execute(
-        f"CREATE TABLE {BOOKING_TABLE_NAME} VALUES (id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, topic VARCHAR(255), day VARCHAR(9) NOT NULL, bookingUserId FOREIGN KEY REFERENCES {USER_TABLE_NAME} (id) NOT NULL, bookedUserId FOREIGN KEY REFERENCES {USER_TABLE_NAME} (id) NOT NULL, timeRange VARCHAR(9) NOT NULL);"
+        f"CREATE TABLE {BOOKING_TABLE_NAME} (id INT PRIMARY KEY NOT NULL AUTO_INCREMENT, topic VARCHAR(255) NOT NULL, `day` VARCHAR(9) NOT NULL, bookingUserId INT NOT NULL, bookedUserId INT NOT NULL, FOREIGN KEY (bookingUserId) REFERENCES {USER_TABLE_NAME}(id), FOREIGN KEY (bookedUserId) REFERENCES {USER_TABLE_NAME}(id), timeRange VARCHAR(9) NOT NULL);"
     )

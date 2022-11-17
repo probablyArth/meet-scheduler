@@ -1,10 +1,5 @@
 from . import cursor, connection, SCHEDULE_TABLE_NAME
 
-if ("meetscheduler",) not in cursor.fetchall():
-    cursor.execute("CREATE DATABASE meetscheduler;")
-
-cursor.execute("USE meetscheduler")
-
 
 class Schedule:
     def insert(
@@ -18,13 +13,29 @@ class Schedule:
         saturday: str,
         sunday: str,
     ):
-
-        cursor.execute(
-            f"INSERT INTO {SCHEDULE_TABLE_NAME}(userId, monday, tuesday, wednesday, thursday, friday, saturday, sunday) VALUES({userId}, {monday}, {tuesday}, {wednesday}, {thursday}, {friday}, {saturday}, {sunday});"
-        )
-
+        query = f"INSERT INTO {SCHEDULE_TABLE_NAME}(userId, monday, tuesday, wednesday, thursday, friday, saturday, sunday) VALUES({userId}, '{monday}', '{tuesday}', '{wednesday}', '{thursday}', '{friday}', '{saturday}', '{sunday}');"
+        print(f"\nExecuting:\n{query}")
+        cursor.execute(query)
         connection.commit()
-        print(f"Inserted Successfully\nRow Id: {cursor.lastrowid}")
+        return cursor.lastrowid
+
+    def update(
+        self,
+        monday: str,
+        tuesday: str,
+        wednesday: str,
+        thursday: str,
+        friday: str,
+        saturday: str,
+        sunday: str,
+    ):
+        query = f"UPDATE {SCHEDULE_TABLE_NAME} SET monday='{monday}', tuesday='{tuesday}', wednesday='{wednesday}', thursday='{thursday}', friday='{friday}', saturday='{saturday}', sunday='{sunday}'"
+        cursor.execute(query)
+        connection.commit()
+        print(f"\nExecuted:\n{query}")
 
     def getByCondition(self, whereCondition: str):
-        cursor.execute(f"SELECT * FROM {SCHEDULE_TABLE_NAME} WHERE {whereCondition}")
+        query = f"SELECT * FROM {SCHEDULE_TABLE_NAME} WHERE {whereCondition}"
+        print(f"\nExecuting:\n{query}")
+        cursor.execute(query)
+        return cursor.fetchall()
