@@ -13,6 +13,13 @@ class User:
         return cursor.lastrowid
 
     def getByCondition(self, whereCondition: str):
-        print(f"SELECT * FROM {USER_TABLE_NAME} WHERE {whereCondition}")
-        cursor.execute(f"SELECT * FROM {USER_TABLE_NAME} WHERE {whereCondition}")
+        query = f"SELECT * FROM {USER_TABLE_NAME} WHERE {whereCondition}"
+        print(f"EXECUTING {query}")
+        cursor.execute(query)
+        return cursor.fetchall()
+        
+    def getAll(self):
+        query = f"SELECT * FROM {USER_TABLE_NAME};"
+        print(f"EXECUTING {query}")
+        cursor.execute(query)
         return cursor.fetchall()

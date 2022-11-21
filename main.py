@@ -1,6 +1,5 @@
-from cgitb import text
 from CONSTANTS import *
-from tkinter import Frame
+from tkinter import Frame, Listbox
 from tkinter.ttk import Button, Entry, Label
 from tkinter import messagebox
 from ttkthemes import ThemedTk
@@ -15,41 +14,43 @@ signed_in_user = None
 
 root = ThemedTk(theme="Breeze")
 root.geometry(f"{SCREEN_WIDTH}x{SCREEN_HEIGHT}")
-root.resizable = False
+root.title("Meet Scheduler")
 
 home_screen = Frame(root)
 signup_screen = Frame(root)
 login_screen = Frame(root)
 dashboard_screen = Frame(root)
 
-home_screen.pack()
+home_screen.grid(sticky="NESW")
 
 
 screens_array = [home_screen, signup_screen, login_screen, dashboard_screen]
 
 
 def setScreen(screen: Frame):
-    if screen == dashboard_screen:
-        goto_home_button.forget()
-        goto_login_button.forget()
-        goto_signup_button.forget()
     for sc in screens_array:
-        sc.forget()
-    screen.pack()
+        sc.grid_forget()
+    screen.grid(column=1)
 
 
 goto_home_button = Button(root, text="Home", command=lambda: setScreen(home_screen))
-goto_home_button.pack()
+goto_home_button.grid(column=1, row=1)
 goto_signup_button = Button(
     root, text="Sign Up", command=lambda: setScreen(signup_screen)
 )
-goto_signup_button.pack()
+goto_signup_button.grid(column=1, row=2)
 goto_login_button = Button(root, text="Login", command=lambda: setScreen(login_screen))
-goto_login_button.pack()
+goto_login_button.grid(column=1, row=3)
 
 
 # HOME SCREEN
-Label(home_screen, text="Welcome to Meet Scheduler").pack()
+Label(home_screen, text="Welcome to Meet Scheduler", font=("bold", 22)).grid(row=0)
+
+
+def removeButtons():
+    goto_home_button.grid_forget()
+    goto_signup_button.grid_forget()
+    goto_login_button.grid_forget()
 
 
 def signUp(username: str, password: str):
@@ -75,8 +76,10 @@ def signUp(username: str, password: str):
         )
         messagebox.showinfo(title="Success", message="User created successfully!")
         setScreen(dashboard_screen)
+        removeButtons()
         signed_in_user = user_id
         updateSchedule()
+        populate_listbox()
     except Exception as e:
         print(e)
         messagebox.showerror(
@@ -100,6 +103,8 @@ def logIn(username: str, password: str):
         setScreen(dashboard_screen)
         signed_in_user = res[0][0]
         updateSchedule()
+        removeButtons()
+        populate_listbox()
     except Exception as e:
         print(e)
         messagebox.showerror(
@@ -140,15 +145,20 @@ Label(dashboard_screen, text="DASHBOARD").grid(row=0, column=0)
 
 dashboard_home_frame = Frame(dashboard_screen)
 update_schedule_frame = Frame(dashboard_screen)
-dashboard_frames_array = [dashboard_home_frame, update_schedule_frame]
+book_schedule_frame = Frame(dashboard_screen)
+dashboard_frames_array = [
+    dashboard_home_frame,
+    update_schedule_frame,
+    book_schedule_frame,
+]
 
-dashboard_home_frame.grid()
+dashboard_home_frame.grid(column=1)
 
 
 def setDashboardFrame(screen: Frame):
     for sc in dashboard_frames_array:
         sc.grid_forget()
-    screen.grid()
+    screen.grid(column=1)
 
 
 def updateSchedule():
@@ -183,6 +193,11 @@ Button(
     dashboard_home_frame,
     text="Update Schedule",
     command=lambda: setDashboardFrame(update_schedule_frame),
+).grid()
+Button(
+    dashboard_home_frame,
+    text="Book a Schedule",
+    command=lambda: setDashboardFrame(book_schedule_frame),
 ).grid()
 
 # Update schedule FRAME
@@ -232,5 +247,66 @@ Button(
     text="Go Back",
     command=lambda: setDashboardFrame(dashboard_home_frame),
 ).grid()
+
+Button(
+    book_schedule_frame,
+    text="Go Back",
+    command=lambda: setDashboardFrame(dashboard_home_frame),
+).grid()
+
+list_box_idx = 1
+
+
+def populate_listbox():
+    global list_box_idx
+    users = user_orm.getAll()
+    for record in users:
+        if record[0] != signed_in_user:
+            user_list_box.insert(list_box_idx, record[:2])
+            list_box_idx += 1
+
+
+# BOOK SCHEDULE FRAME
+def print_selected(event):
+    selected_index = user_list_box.curselection()
+    data = schedule_orm.getByCondition(
+        f"userId = {user_list_box.get(selected_index)[0]}"
+    )[0]
+    print(data)
+    monday_label_booking.config(text=data[1])
+    tuesday_label_booking.config(text=data[2])
+    wednesday_label_booking.config(text=data[3])
+    thursday_label_booking.config(text=data[4])
+    friday_label_booking.config(text=data[5])
+    saturday_label_booking.config(text=data[6])
+    sunday_label_booking.config(text=data[7])
+
+
+Label(book_schedule_frame, text="Book a schedule").grid()
+user_list_box = Listbox(book_schedule_frame)
+user_list_box.bind("<<ListboxSelect>>", print_selected)
+user_list_box.grid(column=0, rowspan=7)
+Label(book_schedule_frame, text="Monday").grid(row=1, column=1)
+Label(book_schedule_frame, text="Tuesday").grid(row=2, column=1)
+Label(book_schedule_frame, text="Wednesday").grid(row=3, column=1)
+Label(book_schedule_frame, text="Thursday").grid(row=4, column=1)
+Label(book_schedule_frame, text="Friday").grid(row=5, column=1)
+Label(book_schedule_frame, text="Saturday").grid(row=6, column=1)
+Label(book_schedule_frame, text="Sunday").grid(row=7, column=1)
+
+monday_label_booking = Label(book_schedule_frame, text="")
+monday_label_booking.grid(row=1, column=3)
+tuesday_label_booking = Label(book_schedule_frame, text="")
+tuesday_label_booking.grid(row=2, column=3)
+wednesday_label_booking = Label(book_schedule_frame, text="")
+wednesday_label_booking.grid(row=3, column=3)
+thursday_label_booking = Label(book_schedule_frame, text="")
+thursday_label_booking.grid(row=4, column=3)
+friday_label_booking = Label(book_schedule_frame, text="")
+friday_label_booking.grid(row=5, column=3)
+saturday_label_booking = Label(book_schedule_frame, text="")
+saturday_label_booking.grid(row=6, column=3)
+sunday_label_booking = Label(book_schedule_frame, text="")
+sunday_label_booking.grid(row=7, column=3)
 
 root.mainloop()
